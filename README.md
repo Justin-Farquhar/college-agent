@@ -57,10 +57,16 @@ The website never computes these; it only reads and displays them.
 
 ## Pages
 
-- **Home (`/`)** — Search and filters; click Search to load results from the API. Click a school for details or “Compare” to add it to the compare view.
-- **School detail (`/schools/[id]`)** — Financial snapshot and pre-computed ROI / break-even.
-- **Compare (`/compare?schools=id1,id2,...`)** — Side-by-side table of selected schools (from search result links).
+- **Home (`/`)** — Search and filters; click Search to load results from the API. Each result card shows key metrics (typical annual net price, typical total student debt, completion, earnings @10 yrs), plus:
+  - **View details**: go to the single-school page with the full metric breakdown and explanations.
+  - **Compare**: add that school to a sticky compare selection (stored locally) without leaving the page; a toast confirms “Added to Compare tab”.
+- **School detail (`/schools/[id]`)** — Financial snapshot and pre-computed ROI / break-even for a single school, using the same derived fields as compare (debt over 10 yrs, earnings premium vs cost, break-even years) with inline explanations/tooltips.
+- **Compare (`/compare`)** — Side-by-side table of selected schools. The Compare tab reads the current selection from the URL (if present) or from the sticky local selection (built via Compare buttons on cards), and lets you remove schools from the comparison.
 
 ## Optional: InstantDB
 
-InstantDB is still in the project for **auth** and **shortlist/saved comparisons** if you want them. The main school list does not use it; it uses `data/schools.json` and `/api/schools` only.
+InstantDB is still in the project for **auth** and **shortlist/saved comparisons** if you want them, but it is **not required for the core V1 flow**:
+
+- The main school list and compare experience only use `data/schools.json` and `/api/schools`.
+- The `Shortlist` tab and `Login` are hooks for future features (per-user saved schools and saved comparison sets). In the current version, they can be treated as optional/experimental.
+
