@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { addToCompareSelection } from '@/lib/compareSelection';
 
 type School = {
   id: string;
@@ -33,10 +34,17 @@ function getRoiBadge(school: School): string {
 export function SchoolCard({
   school,
   canSave,
+  onAddedToCompare,
 }: {
   school: School;
   canSave: boolean;
+  onAddedToCompare?: (schoolName: string) => void;
 }) {
+  const handleCompareClick = () => {
+    addToCompareSelection(school.id);
+    onAddedToCompare?.(school.name);
+  };
+
   return (
     <article className="card flex flex-col justify-between gap-3">
       <div>
@@ -67,29 +75,46 @@ export function SchoolCard({
           <div>
             <dt className="text-slate-500">Median debt</dt>
             <dd className="font-medium">
-              {school.medianDebt ? `$${school.medianDebt.toLocaleString()}` : '—'}
+              {school.medianDebt
+                ? `$${school.medianDebt.toLocaleString()}`
+                : '—'}
             </dd>
           </div>
           <div>
             <dt className="text-slate-500">Completion</dt>
             <dd className="font-medium">
-              {school.completionRate ? `${school.completionRate.toFixed(1)}%` : '—'}
+              {school.completionRate
+                ? `${school.completionRate.toFixed(1)}%`
+                : '—'}
             </dd>
           </div>
           <div>
             <dt className="text-slate-500">Earnings @10 yrs</dt>
             <dd className="font-medium">
-              {school.earningsAt10Yrs ? `$${school.earningsAt10Yrs.toLocaleString()}` : '—'}
+              {school.earningsAt10Yrs
+                ? `$${school.earningsAt10Yrs.toLocaleString()}`
+                : '—'}
             </dd>
           </div>
         </dl>
       </div>
 
       <div className="flex items-center gap-2 pt-1">
-        <Link href={`/compare?schools=${school.id}`} className="text-xs btn">
+        <button
+          type="button"
+          onClick={handleCompareClick}
+          className="btn text-xs"
+        >
           Compare
+        </button>
+        <Link
+          href={`/schools/${school.id}`}
+          className="text-xs text-slate-300 hover:underline"
+        >
+          View details
         </Link>
       </div>
     </article>
   );
 }
+

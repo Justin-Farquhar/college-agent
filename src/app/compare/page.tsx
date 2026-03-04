@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { InfoTooltip } from '@/components/InfoTooltip';
+import {
+  getStoredCompareSelection,
+  setStoredCompareSelection,
+} from '@/lib/compareSelection';
 
 type School = {
   id: string;
@@ -14,34 +19,56 @@ type School = {
   earningsAt10Yrs: number;
   debtWithInterest10Yrs?: number;
   earningsPremium10Yrs?: number;
+  breakEvenYears?: number | null;
 };
 
 export default function ComparePage() {
   const searchParams = useSearchParams();
-  const schoolIds = searchParams.get('schools')?.split(',').filter(Boolean) ?? [];
+  const router = useRouter();
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (schoolIds.length === 0) {
+    const fromQuery =
+      searchParams.get('schools')?.split(',').filter(Boolean) ?? [];
+    const ids =
+      fromQuery.length > 0 ? fromQuery : getStoredCompareSelection();
+    if (ids.length === 0) {
       setSchools([]);
       return;
     }
     setLoading(true);
     setError(null);
     Promise.all(
-      schoolIds.map((id) =>
+      ids.map((id) =>
         fetch(`/api/schools?id=${encodeURIComponent(id)}`).then((r) => {
           if (!r.ok) throw new Error('Not found');
           return r.json();
         })
       )
     )
-      .then(setSchools)
+      .then((data) => {
+        setSchools(data);
+        setStoredCompareSelection(
+          data.map((s: School) => String(s.id)),
+        );
+      })
       .catch(() => setError('Could not load one or more schools.'))
       .finally(() => setLoading(false));
-  }, [schoolIds.join(',')]);
+  }, [searchParams]);
+
+  const handleRemoveSchool = (id: string) => {
+    const current = getStoredCompareSelection();
+    const next = current.filter((sId) => sId !== String(id));
+    setStoredCompareSelection(next);
+    if (next.length === 0) {
+      router.push('/');
+      return;
+    }
+    const query = next.join(',');
+    router.push(`/compare?schools=${encodeURIComponent(query)}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -57,14 +84,14 @@ export default function ComparePage() {
         </div>
       </section>
 
-      {schoolIds.length === 0 && (
+      {getStoredCompareSelection().length === 0 && (
         <p className="text-sm text-slate-400">
-          Add schools from the home page: search, then click &quot;Compare&quot; on a
-          school card to add it to the comparison URL.
+          No schools in Compare yet. From search results, click
+          &quot;Compare&quot; on a school card to add it here.
         </p>
       )}
 
-      {loading && schoolIds.length > 0 && (
+      {loading && (
         <p className="text-sm text-slate-400">Loading schools…</p>
       )}
       {error && <p className="text-sm text-red-400">{error}</p>}
@@ -82,11 +109,25 @@ export default function ComparePage() {
                     key={s.id}
                     className="px-3 py-2 text-left font-medium text-slate-100"
                   >
-                    <a href={`/schools/${s.id}`} className="hover:underline">
-                      {s.name}
-                    </a>
-                    <div className="text-[10px] text-slate-500">
-                      {s.state} • {s.isPublic ? 'Public' : 'Private'}
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <a
+                          href={`/schools/${s.id}`}
+                          className="hover:underline"
+                        >
+                          {s.name}
+                        </a>
+                        <div className="text-[10px] text-slate-500">
+                          {s.state} • {s.isPublic ? 'Public' : 'Private'}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSchool(String(s.id))}
+                        className="text-[10px] text-slate-500 hover:text-slate-200"
+                      >
+                        Remove
+                      </button>
                     </div>
                   </th>
                 ))}
@@ -94,7 +135,26 @@ export default function ComparePage() {
             </thead>
             <tbody className="divide-y divide-slate-800 bg-slate-950/40">
               <tr>
-                <td className="px-3 py-2 text-slate-400">Avg. net price</td>
+                <td className="px-3 py-2 text-slate-400">
+                  <div className="flex items-center">
+                    Typical annual net price
+                    <InfoTooltip label="Typical annual net price explanation">
+                      <p className="mb-1">
+                        Typical annual net price is what students usually pay
+                        out of pocket for one year after grants and
+                        scholarships.
+                      </p>
+                      <p>
+                        Roughly:{' '}
+                        <span className="font-semibold">
+                          sticker price per year – average grants and
+                          scholarships per year
+                        </span>
+                        .
+                      </p>
+                    </InfoTooltip>
+                  </div>
+                </td>
                 {schools.map((s) => (
                   <td key={s.id} className="px-3 py-2 font-medium">
                     {s.netPrice ? `$${s.netPrice.toLocaleString()}` : '—'}
@@ -102,7 +162,25 @@ export default function ComparePage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-3 py-2 text-slate-400">Median debt</td>
+                <td className="px-3 py-2 text-slate-400">
+                  <div className="flex items-center">
+                    Typical total student debt
+                    <InfoTooltip label="Typical total student debt explanation">
+                      <p className="mb-1">
+                        Typical total student debt is the amount a typical
+                        graduate owes in student loans at or near graduation.
+                      </p>
+                      <p>
+                        Conceptually it&apos;s the{' '}
+                        <span className="font-semibold">
+                          median total federal student loan balance at
+                          graduation
+                        </span>
+                        .
+                      </p>
+                    </InfoTooltip>
+                  </div>
+                </td>
                 {schools.map((s) => (
                   <td key={s.id} className="px-3 py-2 font-medium">
                     {s.medianDebt ? `$${s.medianDebt.toLocaleString()}` : '—'}
@@ -111,7 +189,28 @@ export default function ComparePage() {
               </tr>
               <tr>
                 <td className="px-3 py-2 text-slate-400">
-                  Debt over 10 yrs (est.)
+                  <div className="flex items-center">
+                    Debt over 10 yrs (est.)
+                    <InfoTooltip label="Debt over 10 years explanation">
+                      <p className="mb-1">
+                        Debt over 10 years estimates how much the typical
+                        student debt turns into over a decade of repayment under
+                        a simple interest assumption.
+                      </p>
+                      <p className="mb-1">
+                        With 5% simple interest over 10 years, a rough formula
+                        is:{' '}
+                        <span className="font-semibold">
+                          median debt × (1 + 0.05 × 10)
+                        </span>
+                        .
+                      </p>
+                      <p>
+                        Actual repayment paths, interest rates, and timelines
+                        vary a lot, so treat this as a rule-of-thumb estimate.
+                      </p>
+                    </InfoTooltip>
+                  </div>
                 </td>
                 {schools.map((s) => (
                   <td key={s.id} className="px-3 py-2 font-medium">
@@ -122,7 +221,25 @@ export default function ComparePage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-3 py-2 text-slate-400">Completion rate</td>
+                <td className="px-3 py-2 text-slate-400">
+                  <div className="flex items-center">
+                    Completion rate
+                    <InfoTooltip label="Completion rate explanation">
+                      <p className="mb-1">
+                        Completion rate is the share of first-time, full-time
+                        students who finish a degree here within a standard time
+                        window.
+                      </p>
+                      <p>
+                        Roughly:{' '}
+                        <span className="font-semibold">
+                          completers ÷ cohort size × 100
+                        </span>
+                        .
+                      </p>
+                    </InfoTooltip>
+                  </div>
+                </td>
                 {schools.map((s) => (
                   <td key={s.id} className="px-3 py-2 font-medium">
                     {s.completionRate != null
@@ -133,7 +250,23 @@ export default function ComparePage() {
               </tr>
               <tr>
                 <td className="px-3 py-2 text-slate-400">
-                  Earnings @10 yrs
+                  <div className="flex items-center">
+                    Typical annual earnings @10 yrs
+                    <InfoTooltip label="Typical annual earnings at 10 years explanation">
+                      <p className="mb-1">
+                        This is the typical annual earnings of former students
+                        about 10 years after they first enrolled, based on
+                        federal tax data.
+                      </p>
+                      <p>
+                        Conceptually it&apos;s the{' '}
+                        <span className="font-semibold">
+                          median annual earnings 10 years after entry
+                        </span>
+                        .
+                      </p>
+                    </InfoTooltip>
+                  </div>
                 </td>
                 {schools.map((s) => (
                   <td key={s.id} className="px-3 py-2 font-medium">
@@ -145,12 +278,72 @@ export default function ComparePage() {
               </tr>
               <tr>
                 <td className="px-3 py-2 text-slate-400">
-                  Earnings premium vs cost
+                  <div className="flex items-center">
+                    Earnings premium vs cost (10 yrs est.)
+                    <InfoTooltip label="Earnings premium versus cost explanation">
+                      <p className="mb-1">
+                        Earnings premium vs cost is a rough estimate of how much
+                        more money a typical student earns over about 10 years
+                        compared with what they paid to attend, including
+                        interest on typical student debt.
+                      </p>
+                      <p className="mb-1">
+                        Conceptually it looks like:{' '}
+                        <span className="font-semibold">
+                          10-year earnings − 4 years of net price − 10-year debt
+                          with interest
+                        </span>
+                        .
+                      </p>
+                      <p>
+                        It uses simplifying assumptions (steady earnings, 4-year
+                        completion, 5% simple interest) and should be read as an
+                        estimate, not a guarantee.
+                      </p>
+                    </InfoTooltip>
+                  </div>
                 </td>
                 {schools.map((s) => (
                   <td key={s.id} className="px-3 py-2 font-medium">
                     {s.earningsPremium10Yrs != null
                       ? `$${s.earningsPremium10Yrs.toLocaleString()}`
+                      : '—'}
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <td className="px-3 py-2 text-slate-400">
+                  <div className="flex items-center">
+                    Break-even (years)
+                    <InfoTooltip label="Break-even years explanation">
+                      <p className="mb-1">
+                        Break-even is about how many years of extra earnings it
+                        takes to cover the total cost of attending, including
+                        interest on typical student debt.
+                      </p>
+                      <p className="mb-1">
+                        Conceptually, it compares the{' '}
+                        <span className="font-semibold">
+                          total cost with interest
+                        </span>{' '}
+                        to an estimate of your{' '}
+                        <span className="font-semibold">
+                          annual earnings premium
+                        </span>
+                        .
+                      </p>
+                      <p>
+                        It uses simplifying assumptions (4-year completion, 5%
+                        simple interest, and typical earnings) and is meant as a
+                        guide, not a promise.
+                      </p>
+                    </InfoTooltip>
+                  </div>
+                </td>
+                {schools.map((s) => (
+                  <td key={s.id} className="px-3 py-2 font-medium">
+                    {s.breakEvenYears != null
+                      ? `${s.breakEvenYears} yrs`
                       : '—'}
                   </td>
                 ))}
@@ -162,3 +355,4 @@ export default function ComparePage() {
     </div>
   );
 }
+
