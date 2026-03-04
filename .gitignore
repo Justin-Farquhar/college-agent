@@ -6,8 +6,6 @@ node_modules/
 out/
 
 # Build output
-data/schools.json
-data/colleges.json
 
 # Local data (keep folder, ignore large/private files if desired)
 # data/*.csv
