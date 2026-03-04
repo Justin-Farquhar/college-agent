@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import {
@@ -22,7 +22,7 @@ type School = {
   breakEvenYears?: number | null;
 };
 
-export default function ComparePage() {
+function CompareContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [schools, setSchools] = useState<School[]>([]);
@@ -353,6 +353,18 @@ export default function ComparePage() {
         </section>
       )}
     </div>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense
+      fallback={
+        <p className="text-sm text-slate-400">Loading comparison view…</p>
+      }
+    >
+      <CompareContent />
+    </Suspense>
   );
 }
 
