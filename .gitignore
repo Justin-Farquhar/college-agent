@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build output
+data/schools.json
+data/colleges.json
+
+# Local data (keep folder, ignore large/private files if desired)
+# data/*.csv
+# data/*.xlsx
+
+# Env and IDE
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# TypeScript
+next-env.d.ts
