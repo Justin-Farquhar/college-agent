@@ -1,12 +1,15 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { id as idGen } from '@instantdb/react';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import {
   getStoredCompareSelection,
   setStoredCompareSelection,
 } from '@/lib/compareSelection';
+import { getDb } from '@/lib/db';
 
 type School = {
   id: string;
@@ -25,13 +28,61 @@ type School = {
 function CompareContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const db = getDb();
+  const { user } = db.useAuth();
+  const compId = searchParams.get('id');
+  const { data: compData } = db.useQuery(
+    compId
+      ? {
+          comparison_schools: {
+            $: {
+              where: { comparisonId: compId },
+            },
+          },
+        }
+      : null
+  );
+  const { data: currentCompData } = db.useQuery(
+    compId && user
+      ? {
+          comparisons: {
+            $: {
+              where: { id: compId },
+            },
+          },
+        }
+      : null
+  );
+  const currentComparison = currentCompData?.comparisons?.[0];
+  const canRemoveComparison = Boolean(user && compId && currentComparison && currentComparison.userId === user.id);
+
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveCompOpen, setSaveCompOpen] = useState(false);
+  const [saveCompName, setSaveCompName] = useState('');
+  const [saveCompNotes, setSaveCompNotes] = useState('');
+  const [saveCompError, setSaveCompError] = useState<string | null>(null);
+  const [saveCompSuccess, setSaveCompSuccess] = useState(false);
+
+  // When URL has ?id=compId, load comparison_schools and redirect to ?schools=id1,id2
+  useEffect(() => {
+    if (!compId || !compData?.comparison_schools?.length) return;
+    const ordered = [...compData.comparison_schools].sort(
+      (a: { order: number }, b: { order: number }) => (a.order ?? 0) - (b.order ?? 0)
+    );
+    const schoolIds = ordered
+      .map((r: { schoolId: string }) => r.schoolId)
+      .filter(Boolean);
+    if (schoolIds.length === 0) return;
+    setStoredCompareSelection(schoolIds);
+    router.replace(`/compare?schools=${encodeURIComponent(schoolIds.join(','))}&id=${compId}`);
+  }, [compId, compData?.comparison_schools, router]);
 
   useEffect(() => {
-    const fromQuery =
-      searchParams.get('schools')?.split(',').filter(Boolean) ?? [];
+    const schoolsParam = searchParams.get('schools');
+    if (compId && !schoolsParam) return;
+    const fromQuery = schoolsParam?.split(',').filter(Boolean) ?? [];
     const ids =
       fromQuery.length > 0 ? fromQuery : getStoredCompareSelection();
     if (ids.length === 0) {
@@ -41,8 +92,8 @@ function CompareContent() {
     setLoading(true);
     setError(null);
     Promise.all(
-      ids.map((id) =>
-        fetch(`/api/schools?id=${encodeURIComponent(id)}`).then((r) => {
+      ids.map((sid) =>
+        fetch(`/api/schools?id=${encodeURIComponent(sid)}`).then((r) => {
           if (!r.ok) throw new Error('Not found');
           return r.json();
         })
@@ -56,11 +107,22 @@ function CompareContent() {
       })
       .catch(() => setError('Could not load one or more schools.'))
       .finally(() => setLoading(false));
-  }, [searchParams]);
+  }, [searchParams, compId]);
 
-  const handleRemoveSchool = (id: string) => {
+  const handleRemoveComparisonFromSaved = useCallback(() => {
+    if (!compId) return;
+    db.transact(db.tx.comparisons[compId].delete());
+    const schoolsParam = searchParams.get('schools');
+    if (schoolsParam) {
+      router.replace(`/compare?schools=${encodeURIComponent(schoolsParam)}`);
+    } else {
+      router.push('/compare');
+    }
+  }, [db, compId, searchParams, router]);
+
+  const handleRemoveSchool = (schoolId: string) => {
     const current = getStoredCompareSelection();
-    const next = current.filter((sId) => sId !== String(id));
+    const next = current.filter((sId) => sId !== String(schoolId));
     setStoredCompareSelection(next);
     if (next.length === 0) {
       router.push('/');
@@ -69,6 +131,38 @@ function CompareContent() {
     const query = next.join(',');
     router.push(`/compare?schools=${encodeURIComponent(query)}`);
   };
+
+  const handleSaveComparison = useCallback(() => {
+    if (!user || schools.length < 2) return;
+    const name = saveCompName.trim() || schools.map((s) => s.name).join(' vs ');
+    setSaveCompError(null);
+    try {
+      const comparisonId = idGen();
+      const txs = [
+        db.tx.comparisons[comparisonId].update({
+          name,
+          notes: saveCompNotes.trim() || undefined,
+          createdAt: new Date(),
+          userId: user.id,
+        }),
+        ...schools.map((s, i) =>
+          db.tx.comparison_schools[idGen()].update({
+            comparisonId,
+            schoolId: String(s.id),
+            order: i,
+          })
+        ),
+      ];
+      db.transact(txs);
+      setSaveCompSuccess(true);
+      setSaveCompOpen(false);
+      setSaveCompName('');
+      setSaveCompNotes('');
+      setTimeout(() => setSaveCompSuccess(false), 3000);
+    } catch {
+      setSaveCompError('Couldn’t save. Try again.');
+    }
+  }, [db, user, schools, saveCompName, saveCompNotes]);
 
   return (
     <div className="space-y-6">
@@ -84,7 +178,87 @@ function CompareContent() {
         </div>
       </section>
 
-      {getStoredCompareSelection().length === 0 && (
+      {canRemoveComparison && (
+        <section className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleRemoveComparisonFromSaved}
+            className="text-xs text-slate-400 hover:text-red-300"
+          >
+            Remove this comparison from saved work
+          </button>
+        </section>
+      )}
+
+      {user && !loading && schools.length >= 2 && (
+        <section className="card space-y-3">
+          {!saveCompOpen ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSaveCompOpen(true)}
+                className="btn text-xs"
+              >
+                Save this comparison
+              </button>
+              {saveCompSuccess && (
+                <span className="text-xs text-emerald-400">
+                  Saved. View in <Link href="/shortlist" className="underline">Saved work</Link>.
+                </span>
+              )}
+            </div>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveComparison();
+              }}
+              className="space-y-3"
+            >
+              <label className="block text-sm font-medium text-slate-100">
+                Name
+                <input
+                  type="text"
+                  value={saveCompName}
+                  onChange={(e) => setSaveCompName(e.target.value)}
+                  placeholder={schools.map((s) => s.name).join(' vs ')}
+                  className="input mt-1 w-full max-w-md"
+                />
+              </label>
+              <label className="block text-sm font-medium text-slate-100">
+                Notes (optional)
+                <textarea
+                  value={saveCompNotes}
+                  onChange={(e) => setSaveCompNotes(e.target.value)}
+                  placeholder="e.g. granted 15k scholarship for one of these"
+                  rows={2}
+                  className="input mt-1 w-full max-w-md resize-y"
+                />
+              </label>
+              {saveCompError && (
+                <p className="text-xs text-red-400">{saveCompError}</p>
+              )}
+              <div className="flex gap-2">
+                <button type="submit" className="btn text-xs">
+                  Save to saved work
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSaveCompOpen(false);
+                    setSaveCompError(null);
+                  }}
+                  className="text-xs text-slate-400 hover:text-slate-100"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
+      )}
+
+      {getStoredCompareSelection().length === 0 && !compId && (
         <p className="text-sm text-slate-400">
           No schools in Compare yet. From search results, click
           &quot;Compare&quot; on a school card to add it here.

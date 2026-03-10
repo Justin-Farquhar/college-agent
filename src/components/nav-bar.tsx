@@ -29,7 +29,7 @@ export function NavBar() {
             Compare
           </Link>
           <Link href="/shortlist" className="text-slate-300 hover:text-white">
-            Shortlist
+            Saved work
           </Link>
           {isLoading ? (
             <span className="text-xs text-slate-400">Checking login…</span>

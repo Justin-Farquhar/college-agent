@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import { id } from '@instantdb/react';
 import { InfoTooltip } from '@/components/InfoTooltip';
+import { getDb } from '@/lib/db';
 
 type SchoolPageProps = { params: { id: string } };
 
@@ -24,18 +26,38 @@ type School = {
 
 export default function SchoolDetailPage({ params }: SchoolPageProps) {
   const routeParams = useParams<{ id: string }>();
-  const id = routeParams?.id ?? params.id;
+  const schoolIdParam = routeParams?.id ?? params.id;
+  const db = getDb();
+  const { user } = db.useAuth();
+  const { data: savedData } = db.useQuery(
+    user
+      ? {
+          saved_schools: {
+            $: {
+              where: { userId: user.id },
+            },
+          },
+        }
+      : null
+  );
+  const savedEntryForThisSchool = useMemo(() => {
+    if (!schoolIdParam || !savedData?.saved_schools) return null;
+    return savedData.saved_schools.find(
+      (s: { schoolId: string }) => String(s.schoolId) === schoolIdParam
+    ) ?? null;
+  }, [schoolIdParam, savedData?.saved_schools]);
 
   const [school, setSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [shortlistError, setShortlistError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!schoolIdParam) return;
     let cancelled = false;
     setLoading(true);
     setError(false);
-    fetch(`/api/schools?id=${encodeURIComponent(id)}`)
+    fetch(`/api/schools?id=${encodeURIComponent(schoolIdParam)}`)
       .then((res) => {
         if (!res.ok) throw new Error('Not found');
         return res.json();
@@ -53,7 +75,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [schoolIdParam]);
 
   if (loading) {
     return <p className="text-sm text-slate-400">Loading school…</p>;
@@ -78,6 +100,32 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
     breakEvenYears,
   } = school;
 
+  const handleSaveToShortlist = () => {
+    if (!user) return;
+    setShortlistError(null);
+    try {
+      db.transact(
+        db.tx.saved_schools[id()].update({
+          userId: user.id,
+          schoolId: String(school.id),
+        })
+      );
+    } catch {
+      setShortlistError('Couldn’t save. Try again.');
+    }
+  };
+
+  const handleRemoveFromShortlist = () => {
+    const saved = savedEntryForThisSchool as { id: string } | null;
+    if (!saved?.id) return;
+    setShortlistError(null);
+    try {
+      db.transact(db.tx.saved_schools[saved.id].delete());
+    } catch {
+      setShortlistError('Couldn’t remove. Try again.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <section className="space-y-1">
@@ -86,6 +134,34 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
           {school.state} • {school.isPublic ? 'Public' : 'Private'}
         </p>
       </section>
+
+      {user && (
+        <section className="flex flex-wrap items-center gap-3">
+          {shortlistError && (
+            <p className="text-sm text-red-400">{shortlistError}</p>
+          )}
+          {savedEntryForThisSchool ? (
+            <>
+              <span className="text-xs text-slate-400">Saved to your list.</span>
+              <button
+                type="button"
+                onClick={handleRemoveFromShortlist}
+                className="text-xs text-slate-300 hover:text-slate-100 hover:underline"
+              >
+                Remove from saved work
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSaveToShortlist}
+              className="btn text-xs"
+            >
+              Save to saved work
+            </button>
+          )}
+        </section>
+      )}
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="card space-y-2">

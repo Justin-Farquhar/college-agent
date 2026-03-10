@@ -34,10 +34,16 @@ function getRoiBadge(school: School): string {
 export function SchoolCard({
   school,
   canSave,
+  savedSchoolId,
+  onSave,
+  onRemove,
   onAddedToCompare,
 }: {
   school: School;
   canSave: boolean;
+  savedSchoolId?: string | null;
+  onSave?: () => void;
+  onRemove?: () => void;
   onAddedToCompare?: (schoolName: string) => void;
 }) {
   const handleCompareClick = () => {
@@ -99,7 +105,7 @@ export function SchoolCard({
         </dl>
       </div>
 
-      <div className="flex items-center gap-2 pt-1">
+      <div className="flex flex-wrap items-center gap-2 pt-1">
         <button
           type="button"
           onClick={handleCompareClick}
@@ -113,6 +119,24 @@ export function SchoolCard({
         >
           View details
         </Link>
+        {canSave && savedSchoolId && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-xs text-slate-400 hover:text-slate-100 hover:underline"
+          >
+            Remove from saved work
+          </button>
+        )}
+        {canSave && !savedSchoolId && onSave && (
+          <button
+            type="button"
+            onClick={onSave}
+            className="text-xs text-slate-300 hover:text-slate-100 hover:underline"
+          >
+            Save to saved work
+          </button>
+        )}
       </div>
     </article>
   );

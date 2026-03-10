@@ -1,17 +1,41 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { id } from '@instantdb/react';
 import { SchoolSearchFilters } from '@/components/school-search-filters';
 import { SchoolCard } from '@/components/school-card';
+import { getDb } from '@/lib/db';
 
 export default function HomePage() {
+  const db = getDb();
+  const { user } = db.useAuth();
+  const { data: savedData } = db.useQuery(
+    user
+      ? {
+          saved_schools: {
+            $: {
+              where: { userId: user.id },
+            },
+          },
+        }
+      : null
+  );
+  const savedSchoolIdBySchoolId = useMemo(() => {
+    const map = new Map<string, string>();
+    savedData?.saved_schools?.forEach((s: { id: string; schoolId: string }) => {
+      map.set(String(s.schoolId), s.id);
+    });
+    return map;
+  }, [savedData?.saved_schools]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [isPublicFilter, setIsPublicFilter] = useState('');
   const [schools, setSchools] = useState<Array<Record<string, unknown>>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [compareToast, setCompareToast] = useState<{
     visible: boolean;
     schoolName?: string;
@@ -19,6 +43,36 @@ export default function HomePage() {
 
   const hasSearchCriteria = Boolean(
     searchTerm.trim() || stateFilter || isPublicFilter,
+  );
+
+  const handleSaveSchool = useCallback(
+    (schoolId: string) => {
+      if (!user) return;
+      setSaveError(null);
+      try {
+        db.transact(
+          db.tx.saved_schools[id()].update({
+            userId: user.id,
+            schoolId,
+          })
+        );
+      } catch (err) {
+        setSaveError('Couldn’t save. Try again.');
+      }
+    },
+    [db, user]
+  );
+
+  const handleRemoveSchool = useCallback(
+    (savedSchoolId: string) => {
+      setSaveError(null);
+      try {
+        db.transact(db.tx.saved_schools[savedSchoolId].delete());
+      } catch (err) {
+        setSaveError('Couldn’t remove. Try again.');
+      }
+    },
+    [db]
   );
 
   const runSearch = useCallback(async () => {
@@ -69,7 +123,7 @@ export default function HomePage() {
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Search the College Scorecard dataset. Results include net price, debt,
           completion, earnings, and derived stats (ROI, break-even). Filter by
-          state and type, then compare or shortlist.
+          state and type, then compare or save to your list.
         </p>
       </section>
 
@@ -84,6 +138,7 @@ export default function HomePage() {
       />
 
       {error && <p className="text-sm text-red-400">{error}</p>}
+      {saveError && <p className="text-sm text-red-400">{saveError}</p>}
 
       {!hasSearchCriteria && (
         <div className="card rounded-xl border-slate-700 bg-slate-900/40 text-center">
@@ -101,16 +156,29 @@ export default function HomePage() {
           )}
           {!isLoading && (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {schools.map((school) => (
-                <SchoolCard
-                  key={String(school.id)}
-                  school={
-                    school as Parameters<typeof SchoolCard>[0]['school']
-                  }
-                  canSave={false}
-                  onAddedToCompare={handleAddedToCompare}
-                />
-              ))}
+              {schools.map((school) => {
+                const schoolId = String(school.id);
+                const savedSchoolId = savedSchoolIdBySchoolId.get(schoolId) ?? null;
+                return (
+                  <SchoolCard
+                    key={schoolId}
+                    school={
+                      school as Parameters<typeof SchoolCard>[0]['school']
+                    }
+                    canSave={!!user}
+                    savedSchoolId={savedSchoolId}
+                    onSave={
+                      user ? () => handleSaveSchool(schoolId) : undefined
+                    }
+                    onRemove={
+                      savedSchoolId
+                        ? () => handleRemoveSchool(savedSchoolId)
+                        : undefined
+                    }
+                    onAddedToCompare={handleAddedToCompare}
+                  />
+                );
+              })}
             </div>
           )}
           {!isLoading && schools.length === 0 && hasSearchCriteria && (
