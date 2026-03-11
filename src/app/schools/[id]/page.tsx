@@ -42,9 +42,8 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
   );
   const savedEntryForThisSchool = useMemo(() => {
     if (!schoolIdParam || !savedData?.saved_schools) return null;
-    return savedData.saved_schools.find(
-      (s: { schoolId: string }) => String(s.schoolId) === schoolIdParam
-    ) ?? null;
+    const list = savedData.saved_schools as unknown as { id: string; schoolId: string }[];
+    return list.find((s) => String(s.schoolId) === schoolIdParam) ?? null;
   }, [schoolIdParam, savedData?.saved_schools]);
 
   const [school, setSchool] = useState<School | null>(null);

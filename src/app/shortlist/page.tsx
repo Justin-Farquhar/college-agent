@@ -5,7 +5,7 @@ import { getDb } from '@/lib/db';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-type AuthUser = { id: string; email?: string };
+type AuthUser = { id: string; email?: string | null };
 
 function ShortlistContent({ user }: { user: AuthUser }) {
   const db = getDb();
@@ -30,9 +30,8 @@ function ShortlistContent({ user }: { user: AuthUser }) {
   const [editingCompNotes, setEditingCompNotes] = useState('');
 
   useEffect(() => {
-    const ids = data?.saved_schools
-      ? [...new Set(data.saved_schools.map((s: { schoolId: string }) => String(s.schoolId)).filter(Boolean))]
-      : [];
+    const list = (data?.saved_schools ?? []) as unknown as { schoolId: string }[];
+    const ids = [...new Set(list.map((s) => String(s.schoolId)).filter(Boolean))];
     if (ids.length === 0) {
       setSchoolNames({});
       return;

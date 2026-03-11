@@ -23,7 +23,8 @@ export default function HomePage() {
   );
   const savedSchoolIdBySchoolId = useMemo(() => {
     const map = new Map<string, string>();
-    savedData?.saved_schools?.forEach((s: { id: string; schoolId: string }) => {
+    const list = (savedData?.saved_schools ?? []) as unknown as { id: string; schoolId: string }[];
+    list.forEach((s) => {
       map.set(String(s.schoolId), s.id);
     });
     return map;

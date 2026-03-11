@@ -68,12 +68,10 @@ function CompareContent() {
   // When URL has ?id=compId, load comparison_schools and redirect to ?schools=id1,id2
   useEffect(() => {
     if (!compId || !compData?.comparison_schools?.length) return;
-    const ordered = [...compData.comparison_schools].sort(
-      (a: { order: number }, b: { order: number }) => (a.order ?? 0) - (b.order ?? 0)
-    );
-    const schoolIds = ordered
-      .map((r: { schoolId: string }) => r.schoolId)
-      .filter(Boolean);
+    type CompSchool = { order?: number; schoolId: string };
+    const items = compData.comparison_schools as unknown as CompSchool[];
+    const ordered = [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const schoolIds = ordered.map((r) => r.schoolId).filter(Boolean);
     if (schoolIds.length === 0) return;
     setStoredCompareSelection(schoolIds);
     router.replace(`/compare?schools=${encodeURIComponent(schoolIds.join(','))}&id=${compId}`);
