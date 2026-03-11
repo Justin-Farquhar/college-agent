@@ -41,24 +41,23 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
-      <p className="text-sm text-slate-300">
+      <h1 className="text-2xl font-semibold tracking-tight text-chalk">Log in</h1>
+      <p className="text-sm text-neon/70">
         Use a one-time 6-digit code emailed to you via InstantDB. No passwords
         to remember.
       </p>
 
       {isLoading ? (
-        <p className="text-sm text-slate-400">Checking your session…</p>
+        <p className="text-sm text-neon/60">Checking your session…</p>
       ) : user ? (
-        <p className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-200">
-          You are logged in as <span className="font-medium">{user.email}</span>
-          .
+        <p className="rounded-lg border border-neon/20 bg-neon/10 p-3 text-sm text-neon">
+          You are logged in as <span className="font-medium text-chalk">{user.email}</span>.
         </p>
       ) : null}
 
       {!codeSent ? (
         <form onSubmit={handleSendCode} className="card space-y-3">
-          <label className="text-sm font-medium text-slate-100">
+          <label className="text-sm font-medium text-chalk">
             Email
             <input
               className="input mt-1"
@@ -84,11 +83,11 @@ export default function LoginPage() {
         </form>
       ) : (
         <form onSubmit={handleVerifyCode} className="card space-y-3">
-          <p className="text-xs text-slate-300">
-            We sent a 6-digit code to <span className="font-medium">{email}</span>. Enter it
+          <p className="text-xs text-neon/70">
+            We sent a 6-digit code to <span className="font-medium text-chalk">{email}</span>. Enter it
             below to finish signing in.
           </p>
-          <label className="text-sm font-medium text-slate-100">
+          <label className="text-sm font-medium text-chalk">
             Code
             <input
               className="input mt-1 tracking-[0.3em]"
@@ -117,4 +116,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

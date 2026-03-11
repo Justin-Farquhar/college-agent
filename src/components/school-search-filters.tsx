@@ -25,15 +25,11 @@ export function SchoolSearchFilters({
 }: SchoolSearchFiltersProps) {
   return (
     <section className="card space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-100">
-            Search & filters
-          </h2>
-          <p className="text-xs text-slate-400">
-            Search by name or filter by state and type to find schools.
-          </p>
-        </div>
+      <div>
+        <h2 className="text-sm font-semibold text-chalk">Search & filters</h2>
+        <p className="text-xs text-neon/60">
+          Search by name or filter by state and type to find schools.
+        </p>
       </div>
 
       <form

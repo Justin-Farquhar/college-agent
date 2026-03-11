@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { id } from '@instantdb/react';
 import { SchoolSearchFilters } from '@/components/school-search-filters';
 import { SchoolCard } from '@/components/school-card';
 import { getDb } from '@/lib/db';
 
-export default function HomePage() {
+function HomeContent() {
   const db = getDb();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { user } = db.useAuth();
   const { data: savedData } = db.useQuery(
     user
@@ -30,9 +33,10 @@ export default function HomePage() {
     return map;
   }, [savedData?.saved_schools]);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [stateFilter, setStateFilter] = useState('');
-  const [isPublicFilter, setIsPublicFilter] = useState('');
+  // Initialise from URL so state survives back-navigation
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('q') ?? '');
+  const [stateFilter, setStateFilter] = useState(() => searchParams.get('state') ?? '');
+  const [isPublicFilter, setIsPublicFilter] = useState(() => searchParams.get('type') ?? '');
   const [schools, setSchools] = useState<Array<Record<string, unknown>>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +62,7 @@ export default function HomePage() {
           })
         );
       } catch (err) {
-        setSaveError('Couldn’t save. Try again.');
+        setSaveError("Couldn't save. Try again.");
       }
     },
     [db, user]
@@ -70,13 +74,20 @@ export default function HomePage() {
       try {
         db.transact(db.tx.saved_schools[savedSchoolId].delete());
       } catch (err) {
-        setSaveError('Couldn’t remove. Try again.');
+        setSaveError("Couldn't remove. Try again.");
       }
     },
     [db]
   );
 
   const runSearch = useCallback(async () => {
+    // Keep the URL in sync so back-navigation restores the search
+    const urlParams = new URLSearchParams();
+    if (searchTerm.trim()) urlParams.set('q', searchTerm.trim());
+    if (stateFilter) urlParams.set('state', stateFilter);
+    if (isPublicFilter) urlParams.set('type', isPublicFilter);
+    router.replace(urlParams.toString() ? `/?${urlParams}` : '/', { scroll: false });
+
     if (!hasSearchCriteria) {
       setSchools([]);
       return;
@@ -105,23 +116,35 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, stateFilter, isPublicFilter, hasSearchCriteria]);
+  }, [searchTerm, stateFilter, isPublicFilter, hasSearchCriteria, router]);
 
-  const handleAddedToCompare = (schoolName: string) => {
+  // Auto-run search on mount if URL already has params (e.g. user pressed Back)
+  const didMountSearch = useRef(false);
+  useEffect(() => {
+    if (didMountSearch.current) return;
+    didMountSearch.current = true;
+    if (hasSearchCriteria) {
+      runSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleAddedToCompare = useCallback((schoolName: string) => {
     setCompareToast({ visible: true, schoolName });
-    window.clearTimeout((handleAddedToCompare as any)._timer);
-    (handleAddedToCompare as any)._timer = window.setTimeout(() => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
       setCompareToast((prev) => ({ ...prev, visible: false }));
     }, 4000);
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-chalk sm:text-3xl">
           Find the right college using real outcomes
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-300">
+        <p className="mt-2 max-w-2xl text-sm text-neon/70">
           Search the College Scorecard dataset. Results include net price, debt,
           completion, earnings, and derived stats (ROI, break-even). Filter by
           state and type, then compare or save to your list.
@@ -142,8 +165,8 @@ export default function HomePage() {
       {saveError && <p className="text-sm text-red-400">{saveError}</p>}
 
       {!hasSearchCriteria && (
-        <div className="card rounded-xl border-slate-700 bg-slate-900/40 text-center">
-          <p className="text-sm text-slate-300">
+        <div className="card rounded-xl border-neon-dim/15 bg-night-card/40 text-center">
+          <p className="text-sm text-neon/60">
             Enter a school name and/or choose state / type above, then search to
             see results.
           </p>
@@ -153,7 +176,7 @@ export default function HomePage() {
       {hasSearchCriteria && (
         <>
           {isLoading && (
-            <p className="text-sm text-slate-400">Loading schools…</p>
+            <p className="text-sm text-neon/60">Loading schools…</p>
           )}
           {!isLoading && (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -183,29 +206,29 @@ export default function HomePage() {
             </div>
           )}
           {!isLoading && schools.length === 0 && hasSearchCriteria && (
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-neon/60">
               No schools match. Try a different name or filters.
             </p>
           )}
         </>
       )}
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-neon/40">
         Data is from your built dataset (run{' '}
-        <code className="rounded bg-slate-800 px-1">npm run data:build</code>{' '}
+        <code className="rounded bg-neon-dim/15 px-1 text-chalk/70">npm run data:build</code>{' '}
         with scorecard.csv in{' '}
-        <code className="rounded bg-slate-800 px-1">data/</code>).
+        <code className="rounded bg-neon-dim/15 px-1 text-chalk/70">data/</code>).
       </p>
 
       {compareToast.visible && (
-        <div className="fixed bottom-4 left-1/2 z-30 w-full max-w-md -translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900/95 px-4 py-3 text-xs text-slate-100 shadow-xl">
+        <div className="fixed bottom-4 left-1/2 z-30 w-full max-w-md -translate-x-1/2 rounded-xl border border-neon-dim/30 bg-night-card/95 px-4 py-3 text-xs text-chalk shadow-2xl shadow-black/60 backdrop-blur">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="font-medium">
-                Added to Compare tab
+              <p className="font-semibold text-chalk">
+                Added to Compare
                 {compareToast.schoolName ? `: ${compareToast.schoolName}` : ''}
               </p>
-              <p className="mt-0.5 text-[11px] text-slate-400">
+              <p className="mt-0.5 text-[11px] text-neon/60">
                 Open the Compare tab at the top to see selected schools side by
                 side.
               </p>
@@ -213,13 +236,13 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <Link
                 href="/compare"
-                className="rounded bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-900 hover:bg-white"
+                className="rounded-md bg-neon-dim px-2.5 py-1 text-[11px] font-semibold text-night transition-colors duration-150 hover:bg-neon hover:text-night"
               >
                 View Compare
               </Link>
               <button
                 type="button"
-                className="text-[11px] text-slate-400 hover:text-slate-100"
+                className="text-[11px] text-neon/50 transition-colors duration-150 hover:text-chalk"
                 onClick={() =>
                   setCompareToast((prev) => ({ ...prev, visible: false }))
                 }
@@ -234,3 +257,10 @@ export default function HomePage() {
   );
 }
 
+export default function HomePage() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
+  );
+}

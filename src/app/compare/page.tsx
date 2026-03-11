@@ -65,7 +65,6 @@ function CompareContent() {
   const [saveCompError, setSaveCompError] = useState<string | null>(null);
   const [saveCompSuccess, setSaveCompSuccess] = useState(false);
 
-  // When URL has ?id=compId, load comparison_schools and redirect to ?schools=id1,id2
   useEffect(() => {
     if (!compId || !compData?.comparison_schools?.length) return;
     type CompSchool = { order?: number; schoolId: string };
@@ -158,7 +157,7 @@ function CompareContent() {
       setSaveCompNotes('');
       setTimeout(() => setSaveCompSuccess(false), 3000);
     } catch {
-      setSaveCompError('Couldn’t save. Try again.');
+      setSaveCompError("Couldn't save. Try again.");
     }
   }, [db, user, schools, saveCompName, saveCompNotes]);
 
@@ -166,10 +165,10 @@ function CompareContent() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight text-chalk">
             Compare colleges side by side
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-300">
+          <p className="mt-2 max-w-2xl text-sm text-neon/70">
             Select 2–4 schools from search results (click Compare on a card) and
             compare net price, debt, completion, earnings, and derived ROI.
           </p>
@@ -181,7 +180,7 @@ function CompareContent() {
           <button
             type="button"
             onClick={handleRemoveComparisonFromSaved}
-            className="text-xs text-slate-400 hover:text-red-300"
+            className="text-xs text-neon/50 transition-colors duration-150 hover:text-red-400"
           >
             Remove this comparison from saved work
           </button>
@@ -200,7 +199,7 @@ function CompareContent() {
                 Save this comparison
               </button>
               {saveCompSuccess && (
-                <span className="text-xs text-emerald-400">
+                <span className="text-xs text-neon">
                   Saved. View in <Link href="/shortlist" className="underline">Saved work</Link>.
                 </span>
               )}
@@ -213,7 +212,7 @@ function CompareContent() {
               }}
               className="space-y-3"
             >
-              <label className="block text-sm font-medium text-slate-100">
+              <label className="block text-sm font-medium text-chalk">
                 Name
                 <input
                   type="text"
@@ -223,7 +222,7 @@ function CompareContent() {
                   className="input mt-1 w-full max-w-md"
                 />
               </label>
-              <label className="block text-sm font-medium text-slate-100">
+              <label className="block text-sm font-medium text-chalk">
                 Notes (optional)
                 <textarea
                   value={saveCompNotes}
@@ -246,7 +245,7 @@ function CompareContent() {
                     setSaveCompOpen(false);
                     setSaveCompError(null);
                   }}
-                  className="text-xs text-slate-400 hover:text-slate-100"
+                  className="text-xs text-neon/60 transition-colors duration-150 hover:text-chalk"
                 >
                   Cancel
                 </button>
@@ -257,46 +256,46 @@ function CompareContent() {
       )}
 
       {getStoredCompareSelection().length === 0 && !compId && (
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-neon/60">
           No schools in Compare yet. From search results, click
           &quot;Compare&quot; on a school card to add it here.
         </p>
       )}
 
       {loading && (
-        <p className="text-sm text-slate-400">Loading schools…</p>
+        <p className="text-sm text-neon/60">Loading schools…</p>
       )}
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {!loading && schools.length > 0 && (
-        <section className="overflow-x-auto rounded-xl border border-slate-800">
+        <section className="overflow-x-auto rounded-xl border border-neon-dim/20">
           <table className="min-w-full border-collapse text-xs">
-            <thead className="bg-slate-900/80">
+            <thead className="bg-night-card/90">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-slate-400">
+                <th className="px-4 py-3 text-left font-medium text-neon/60">
                   Metric
                 </th>
                 {schools.map((s) => (
                   <th
                     key={s.id}
-                    className="px-3 py-2 text-left font-medium text-slate-100"
+                    className="px-4 py-3 text-left font-medium text-chalk"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <a
                           href={`/schools/${s.id}`}
-                          className="hover:underline"
+                          className="transition-colors duration-150 hover:text-neon"
                         >
                           {s.name}
                         </a>
-                        <div className="text-[10px] text-slate-500">
-                          {s.state} • {s.isPublic ? 'Public' : 'Private'}
+                        <div className="text-[10px] text-neon/50 mt-0.5">
+                          {s.state} · {s.isPublic ? 'Public' : 'Private'}
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveSchool(String(s.id))}
-                        className="text-[10px] text-slate-500 hover:text-slate-200"
+                        className="text-[10px] text-neon/40 transition-colors duration-150 hover:text-red-400"
                       >
                         Remove
                       </button>
@@ -305,9 +304,9 @@ function CompareContent() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 bg-slate-950/40">
-              <tr>
-                <td className="px-3 py-2 text-slate-400">
+            <tbody className="divide-y divide-neon-dim/10 bg-night/40">
+              <tr className="transition-colors duration-100 hover:bg-neon-dim/5">
+                <td className="px-4 py-2.5 text-neon/60">
                   <div className="flex items-center">
                     Typical annual net price
                     <InfoTooltip label="Typical annual net price explanation">
@@ -318,7 +317,7 @@ function CompareContent() {
                       </p>
                       <p>
                         Roughly:{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           sticker price per year – average grants and
                           scholarships per year
                         </span>
@@ -328,13 +327,13 @@ function CompareContent() {
                   </div>
                 </td>
                 {schools.map((s) => (
-                  <td key={s.id} className="px-3 py-2 font-medium">
+                  <td key={s.id} className="px-4 py-2.5 font-semibold text-chalk/90">
                     {s.netPrice ? `$${s.netPrice.toLocaleString()}` : '—'}
                   </td>
                 ))}
               </tr>
-              <tr>
-                <td className="px-3 py-2 text-slate-400">
+              <tr className="transition-colors duration-100 hover:bg-neon-dim/5">
+                <td className="px-4 py-2.5 text-neon/60">
                   <div className="flex items-center">
                     Typical total student debt
                     <InfoTooltip label="Typical total student debt explanation">
@@ -344,7 +343,7 @@ function CompareContent() {
                       </p>
                       <p>
                         Conceptually it&apos;s the{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           median total federal student loan balance at
                           graduation
                         </span>
@@ -354,13 +353,13 @@ function CompareContent() {
                   </div>
                 </td>
                 {schools.map((s) => (
-                  <td key={s.id} className="px-3 py-2 font-medium">
+                  <td key={s.id} className="px-4 py-2.5 font-semibold text-chalk/90">
                     {s.medianDebt ? `$${s.medianDebt.toLocaleString()}` : '—'}
                   </td>
                 ))}
               </tr>
-              <tr>
-                <td className="px-3 py-2 text-slate-400">
+              <tr className="transition-colors duration-100 hover:bg-neon-dim/5">
+                <td className="px-4 py-2.5 text-neon/60">
                   <div className="flex items-center">
                     Debt over 10 yrs (est.)
                     <InfoTooltip label="Debt over 10 years explanation">
@@ -372,7 +371,7 @@ function CompareContent() {
                       <p className="mb-1">
                         With 5% simple interest over 10 years, a rough formula
                         is:{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           median debt × (1 + 0.05 × 10)
                         </span>
                         .
@@ -385,15 +384,15 @@ function CompareContent() {
                   </div>
                 </td>
                 {schools.map((s) => (
-                  <td key={s.id} className="px-3 py-2 font-medium">
+                  <td key={s.id} className="px-4 py-2.5 font-semibold text-chalk/90">
                     {s.debtWithInterest10Yrs != null
                       ? `$${s.debtWithInterest10Yrs.toLocaleString()}`
                       : '—'}
                   </td>
                 ))}
               </tr>
-              <tr>
-                <td className="px-3 py-2 text-slate-400">
+              <tr className="transition-colors duration-100 hover:bg-neon-dim/5">
+                <td className="px-4 py-2.5 text-neon/60">
                   <div className="flex items-center">
                     Completion rate
                     <InfoTooltip label="Completion rate explanation">
@@ -404,7 +403,7 @@ function CompareContent() {
                       </p>
                       <p>
                         Roughly:{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           completers ÷ cohort size × 100
                         </span>
                         .
@@ -413,15 +412,15 @@ function CompareContent() {
                   </div>
                 </td>
                 {schools.map((s) => (
-                  <td key={s.id} className="px-3 py-2 font-medium">
+                  <td key={s.id} className="px-4 py-2.5 font-semibold text-chalk/90">
                     {s.completionRate != null
                       ? `${s.completionRate.toFixed(1)}%`
                       : '—'}
                   </td>
                 ))}
               </tr>
-              <tr>
-                <td className="px-3 py-2 text-slate-400">
+              <tr className="transition-colors duration-100 hover:bg-neon-dim/5">
+                <td className="px-4 py-2.5 text-neon/60">
                   <div className="flex items-center">
                     Typical annual earnings @10 yrs
                     <InfoTooltip label="Typical annual earnings at 10 years explanation">
@@ -432,7 +431,7 @@ function CompareContent() {
                       </p>
                       <p>
                         Conceptually it&apos;s the{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           median annual earnings 10 years after entry
                         </span>
                         .
@@ -441,15 +440,15 @@ function CompareContent() {
                   </div>
                 </td>
                 {schools.map((s) => (
-                  <td key={s.id} className="px-3 py-2 font-medium">
+                  <td key={s.id} className="px-4 py-2.5 font-semibold text-chalk/90">
                     {s.earningsAt10Yrs
                       ? `$${s.earningsAt10Yrs.toLocaleString()}`
                       : '—'}
                   </td>
                 ))}
               </tr>
-              <tr>
-                <td className="px-3 py-2 text-slate-400">
+              <tr className="transition-colors duration-100 hover:bg-neon-dim/5">
+                <td className="px-4 py-2.5 text-neon/60">
                   <div className="flex items-center">
                     Earnings premium vs cost (10 yrs est.)
                     <InfoTooltip label="Earnings premium versus cost explanation">
@@ -461,7 +460,7 @@ function CompareContent() {
                       </p>
                       <p className="mb-1">
                         Conceptually it looks like:{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           10-year earnings − 4 years of net price − 10-year debt
                           with interest
                         </span>
@@ -476,15 +475,15 @@ function CompareContent() {
                   </div>
                 </td>
                 {schools.map((s) => (
-                  <td key={s.id} className="px-3 py-2 font-medium">
+                  <td key={s.id} className="px-4 py-2.5 font-semibold text-chalk/90">
                     {s.earningsPremium10Yrs != null
                       ? `$${s.earningsPremium10Yrs.toLocaleString()}`
                       : '—'}
                   </td>
                 ))}
               </tr>
-              <tr>
-                <td className="px-3 py-2 text-slate-400">
+              <tr className="transition-colors duration-100 hover:bg-neon-dim/5">
+                <td className="px-4 py-2.5 text-neon/60">
                   <div className="flex items-center">
                     Break-even (years)
                     <InfoTooltip label="Break-even years explanation">
@@ -495,11 +494,11 @@ function CompareContent() {
                       </p>
                       <p className="mb-1">
                         Conceptually, it compares the{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           total cost with interest
                         </span>{' '}
                         to an estimate of your{' '}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-chalk">
                           annual earnings premium
                         </span>
                         .
@@ -513,7 +512,7 @@ function CompareContent() {
                   </div>
                 </td>
                 {schools.map((s) => (
-                  <td key={s.id} className="px-3 py-2 font-medium">
+                  <td key={s.id} className="px-4 py-2.5 font-semibold text-chalk/90">
                     {s.breakEvenYears != null
                       ? `${s.breakEvenYears} yrs`
                       : '—'}
@@ -532,11 +531,10 @@ export default function ComparePage() {
   return (
     <Suspense
       fallback={
-        <p className="text-sm text-slate-400">Loading comparison view…</p>
+        <p className="text-sm text-neon/60">Loading comparison view…</p>
       }
     >
       <CompareContent />
     </Suspense>
   );
 }
-

@@ -77,7 +77,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
   }, [schoolIdParam]);
 
   if (loading) {
-    return <p className="text-sm text-slate-400">Loading school…</p>;
+    return <p className="text-sm text-neon/60">Loading school…</p>;
   }
 
   if (error || !school) {
@@ -110,7 +110,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
         })
       );
     } catch {
-      setShortlistError('Couldn’t save. Try again.');
+      setShortlistError("Couldn't save. Try again.");
     }
   };
 
@@ -121,16 +121,16 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
     try {
       db.transact(db.tx.saved_schools[saved.id].delete());
     } catch {
-      setShortlistError('Couldn’t remove. Try again.');
+      setShortlistError("Couldn't remove. Try again.");
     }
   };
 
   return (
     <div className="space-y-6">
       <section className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{school.name}</h1>
-        <p className="text-sm text-slate-400">
-          {school.state} • {school.isPublic ? 'Public' : 'Private'}
+        <h1 className="text-2xl font-semibold tracking-tight text-chalk">{school.name}</h1>
+        <p className="text-sm text-neon/60">
+          {school.state} · {school.isPublic ? 'Public' : 'Private'}
         </p>
       </section>
 
@@ -141,11 +141,11 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
           )}
           {savedEntryForThisSchool ? (
             <>
-              <span className="text-xs text-slate-400">Saved to your list.</span>
+              <span className="text-xs text-neon/60">Saved to your list.</span>
               <button
                 type="button"
                 onClick={handleRemoveFromShortlist}
-                className="text-xs text-slate-300 hover:text-slate-100 hover:underline"
+                className="text-xs text-neon/60 transition-colors duration-150 hover:text-red-400"
               >
                 Remove from saved work
               </button>
@@ -164,12 +164,12 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="card space-y-2">
-          <h2 className="text-sm font-semibold text-slate-100">
+          <h2 className="text-sm font-semibold text-chalk">
             Financial snapshot
           </h2>
-          <dl className="grid grid-cols-2 gap-2 text-xs text-slate-300">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
             <div>
-              <dt className="flex items-center text-slate-500">
+              <dt className="flex items-center text-neon/50">
                 Typical annual net price
                 <InfoTooltip label="Typical annual net price explanation">
                   <p className="mb-1">
@@ -178,7 +178,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                   <p>
                     Roughly:{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       sticker price per year – average grants and scholarships
                       per year
                     </span>
@@ -186,12 +186,12 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                 </InfoTooltip>
               </dt>
-              <dd className="font-medium">
+              <dd className="mt-0.5 font-semibold text-chalk/90">
                 {netPrice ? `$${netPrice.toLocaleString()}` : '—'}
               </dd>
             </div>
             <div>
-              <dt className="flex items-center text-slate-500">
+              <dt className="flex items-center text-neon/50">
                 Typical total student debt
                 <InfoTooltip label="Typical total student debt explanation">
                   <p className="mb-1">
@@ -200,19 +200,19 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                   <p>
                     Conceptually it&apos;s the{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       median total federal student loan balance at graduation
                     </span>
                     .
                   </p>
                 </InfoTooltip>
               </dt>
-              <dd className="font-medium">
+              <dd className="mt-0.5 font-semibold text-chalk/90">
                 {medianDebt ? `$${medianDebt.toLocaleString()}` : '—'}
               </dd>
             </div>
             <div>
-              <dt className="flex items-center text-slate-500">
+              <dt className="flex items-center text-neon/50">
                 Completion rate
                 <InfoTooltip label="Completion rate explanation">
                   <p className="mb-1">
@@ -222,19 +222,19 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                   <p>
                     Roughly:{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       completers ÷ cohort size × 100
                     </span>
                     .
                   </p>
                 </InfoTooltip>
               </dt>
-              <dd className="font-medium">
+              <dd className="mt-0.5 font-semibold text-chalk/90">
                 {completionRate ? `${completionRate.toFixed(1)}%` : '—'}
               </dd>
             </div>
             <div>
-              <dt className="flex items-center text-slate-500">
+              <dt className="flex items-center text-neon/50">
                 Typical annual earnings @10 yrs
                 <InfoTooltip label="Typical annual earnings at 10 years explanation">
                   <p className="mb-1">
@@ -244,14 +244,14 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                   <p>
                     Conceptually it&apos;s the{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       median annual earnings 10 years after entry
                     </span>
                     .
                   </p>
                 </InfoTooltip>
               </dt>
-              <dd className="font-medium">
+              <dd className="mt-0.5 font-semibold text-chalk/90">
                 {earningsAt10Yrs ? `$${earningsAt10Yrs.toLocaleString()}` : '—'}
               </dd>
             </div>
@@ -259,18 +259,18 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
         </div>
 
         <div className="card space-y-2">
-          <h2 className="text-sm font-semibold text-slate-100">
+          <h2 className="text-sm font-semibold text-chalk">
             ROI & break-even (estimates)
           </h2>
-          <p className="text-xs text-slate-300">
+          <p className="text-xs text-neon/60">
             These are rough estimates derived from net price, median debt, and
             10-year earnings using standard assumptions (4-year completion, 5%
             simple interest on debt, and steady earnings). They are not
             guarantees.
           </p>
-          <dl className="mt-2 space-y-1 text-xs text-slate-300">
+          <dl className="mt-2 space-y-2 text-xs">
             <div className="flex justify-between gap-4">
-              <dt className="flex items-center text-slate-500">
+              <dt className="flex items-center text-neon/50">
                 Break-even (years)
                 <InfoTooltip label="Break-even years explanation">
                   <p className="mb-1">
@@ -280,11 +280,11 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                   <p className="mb-1">
                     Conceptually, it compares the{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       total cost with interest
                     </span>{' '}
                     to an estimate of your{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       annual earnings premium
                     </span>
                     .
@@ -296,12 +296,12 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                 </InfoTooltip>
               </dt>
-              <dd className="font-medium">
+              <dd className="font-semibold text-chalk/90">
                 {breakEvenYears != null ? `${breakEvenYears} yrs` : '—'}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="flex items-center text-slate-500">
+              <dt className="flex items-center text-neon/50">
                 Earnings premium vs cost
                 <InfoTooltip label="Earnings premium versus cost explanation">
                   <p className="mb-1">
@@ -312,7 +312,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                   <p className="mb-1">
                     Conceptually it looks like:{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       10-year earnings − 4 years of net price − 10-year debt
                       with interest
                     </span>
@@ -325,14 +325,14 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                 </InfoTooltip>
               </dt>
-              <dd className="font-medium">
+              <dd className="font-semibold text-chalk/90">
                 {earningsPremium10Yrs != null
                   ? `$${earningsPremium10Yrs.toLocaleString()}`
                   : '—'}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="flex items-center text-slate-500">
+              <dt className="flex items-center text-neon/50">
                 Debt over 10 yrs (est.)
                 <InfoTooltip label="Debt over 10 years explanation">
                   <p className="mb-1">
@@ -342,7 +342,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                   <p className="mb-1">
                     With 5% simple interest over 10 years, a rough formula is:{' '}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-chalk">
                       median debt × (1 + 0.05 × 10)
                     </span>
                     .
@@ -353,7 +353,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
                   </p>
                 </InfoTooltip>
               </dt>
-              <dd className="font-medium">
+              <dd className="font-semibold text-chalk/90">
                 {debtWithInterest10Yrs != null
                   ? `$${debtWithInterest10Yrs.toLocaleString()}`
                   : '—'}
@@ -363,25 +363,25 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
         </div>
 
         <div className="card space-y-2">
-          <h2 className="text-sm font-semibold text-slate-100">How to read</h2>
-          <ul className="list-disc space-y-1 pl-5 text-xs text-slate-300">
+          <h2 className="text-sm font-semibold text-chalk">How to read</h2>
+          <ul className="list-disc space-y-1.5 pl-5 text-xs text-neon/70">
             <li>
-              <span className="font-medium">Net price</span> is the typical
+              <span className="font-medium text-chalk/80">Net price</span> is the typical
               amount students pay for one year after grants and scholarships,
               not the full sticker price.
             </li>
             <li>
-              <span className="font-medium">Median debt</span> is total student
+              <span className="font-medium text-chalk/80">Median debt</span> is total student
               borrowing at or near graduation for a typical graduate; your own
               borrowing could be higher or lower.
             </li>
             <li>
-              <span className="font-medium">Earnings</span> come from federal
+              <span className="font-medium text-chalk/80">Earnings</span> come from federal
               tax data and reflect typical former students; they do not capture
               non-monetary value or big career changes.
             </li>
             <li>
-              <span className="font-medium">ROI metrics</span> (debt over 10
+              <span className="font-medium text-chalk/80">ROI metrics</span> (debt over 10
               years, earnings premium vs cost, and break-even years) are
               approximate and rely on standard assumptions, so treat them as
               directional guides rather than precise forecasts.
@@ -392,4 +392,3 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
     </div>
   );
 }
-

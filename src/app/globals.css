@@ -3,21 +3,27 @@
 @theme {
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
     ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --color-night:      #0d0d0d;
+  --color-night-card: #171717;
+  --color-neon-dim:   #26C74A;
+  --color-neon:       #57FF7A;
+  --color-chalk:      #EFEFEF;
 }
 
 body {
-  @apply bg-slate-950 text-slate-50 antialiased;
+  @apply bg-night text-chalk antialiased;
+  color-scheme: dark;
 }
 
 .card {
-  @apply rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm;
+  @apply rounded-xl border border-neon-dim/20 bg-night-card/80 p-4 shadow-md shadow-black/40;
 }
 
 .btn {
-  @apply inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60;
+  @apply inline-flex items-center justify-center rounded-lg bg-neon-dim px-4 py-2 text-sm font-medium text-night shadow transition-colors duration-150 hover:bg-neon hover:text-night focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon focus-visible:ring-offset-2 focus-visible:ring-offset-night disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 .input {
-  @apply w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+  @apply w-full rounded-lg border border-neon-dim/30 bg-night px-3 py-2 text-sm text-chalk placeholder:text-neon/40 transition-colors duration-150 focus-visible:border-neon/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon;
 }
-

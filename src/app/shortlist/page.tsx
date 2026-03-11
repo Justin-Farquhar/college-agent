@@ -87,15 +87,15 @@ function ShortlistContent({ user }: { user: AuthUser }) {
   return (
     <div className="space-y-6">
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight">Your saved work</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-300">
+        <h1 className="text-2xl font-semibold tracking-tight text-chalk">Your saved work</h1>
+        <p className="mt-2 max-w-2xl text-sm text-neon/70">
           Saved schools and comparisons tied to your email. Use this as a
           working list to reflect, share, and revisit.
         </p>
       </section>
 
       {isLoading && (
-        <p className="text-sm text-slate-400">Loading your saved work…</p>
+        <p className="text-sm text-neon/60">Loading your saved work…</p>
       )}
       {error && (
         <p className="text-sm text-red-400">
@@ -105,26 +105,26 @@ function ShortlistContent({ user }: { user: AuthUser }) {
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="card space-y-3">
-          <h2 className="text-sm font-semibold text-slate-100">
+          <h2 className="text-sm font-semibold text-chalk">
             Saved schools
           </h2>
-          <ul className="space-y-2 text-xs text-slate-200">
+          <ul className="space-y-2 text-xs text-chalk/80">
             {data?.saved_schools?.map((item: any) => (
               <li
                 key={item.id}
-                className="flex flex-col gap-2 rounded-lg bg-slate-900/60 px-3 py-2"
+                className="flex flex-col gap-2 rounded-lg border border-neon-dim/15 bg-night/60 px-3 py-2.5 transition-colors duration-150 hover:border-neon-dim/25"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <Link
                       href={`/schools/${item.schoolId}`}
-                      className="font-medium hover:text-brand-light"
+                      className="font-medium text-chalk transition-colors duration-150 hover:text-neon"
                     >
                       {schoolNames[item.schoolId] ?? `School ${item.schoolId}`}
                     </Link>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-neon/50 mt-0.5">
                       {item.schoolId ? (
-                        <Link href={`/schools/${item.schoolId}`} className="hover:underline">
+                        <Link href={`/schools/${item.schoolId}`} className="transition-colors duration-150 hover:text-neon/80">
                           View details
                         </Link>
                       ) : (
@@ -136,7 +136,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                     <button
                       type="button"
                       onClick={() => db.transact(db.tx.saved_schools[item.id].delete())}
-                      className="text-[11px] text-slate-500 hover:text-red-300"
+                      className="text-[11px] text-neon/40 transition-colors duration-150 hover:text-red-400"
                     >
                       Remove
                     </button>
@@ -162,7 +162,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                       <button
                         type="button"
                         onClick={() => setEditingSavedSchoolId(null)}
-                        className="text-[11px] text-slate-400 hover:text-slate-100"
+                        className="text-[11px] text-neon/60 transition-colors duration-150 hover:text-chalk"
                       >
                         Cancel
                       </button>
@@ -171,14 +171,14 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                 ) : (
                   <>
                     {item.notes && (
-                      <p className="text-[11px] text-slate-400 whitespace-pre-wrap">
+                      <p className="text-[11px] text-neon/60 whitespace-pre-wrap">
                         {item.notes}
                       </p>
                     )}
                     <button
                       type="button"
                       onClick={() => startEditSavedSchool(item)}
-                      className="text-[11px] text-slate-500 hover:text-slate-300"
+                      className="text-[11px] text-neon/40 transition-colors duration-150 hover:text-neon/80 text-left"
                     >
                       {item.notes ? 'Edit notes' : 'Add notes'}
                     </button>
@@ -187,7 +187,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
               </li>
             ))}
             {(!data || data.saved_schools?.length === 0) && (
-              <li className="text-xs text-slate-400">
+              <li className="text-xs text-neon/50">
                 You haven&apos;t saved any schools yet. Use &quot;Save to
                 saved work&quot; on a school card to add one.
               </li>
@@ -196,19 +196,19 @@ function ShortlistContent({ user }: { user: AuthUser }) {
         </div>
 
         <div className="card space-y-3">
-          <h2 className="text-sm font-semibold text-slate-100">
+          <h2 className="text-sm font-semibold text-chalk">
             Saved comparisons
           </h2>
-          <ul className="space-y-2 text-xs text-slate-200">
+          <ul className="space-y-2 text-xs text-chalk/80">
             {data?.comparisons?.map((comp: any) => (
               <li
                 key={comp.id}
-                className="flex flex-col gap-2 rounded-lg bg-slate-900/60 px-3 py-2"
+                className="flex flex-col gap-2 rounded-lg border border-neon-dim/15 bg-night/60 px-3 py-2.5 transition-colors duration-150 hover:border-neon-dim/25"
               >
                 {editingCompId === comp.id ? (
                   <div className="space-y-2">
                     <label className="block">
-                      <span className="text-slate-400">Name</span>
+                      <span className="text-neon/60">Name</span>
                       <input
                         type="text"
                         value={editingCompName}
@@ -217,7 +217,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                       />
                     </label>
                     <label className="block">
-                      <span className="text-slate-400">Notes</span>
+                      <span className="text-neon/60">Notes</span>
                       <textarea
                         value={editingCompNotes}
                         onChange={(e) => setEditingCompNotes(e.target.value)}
@@ -237,7 +237,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                       <button
                         type="button"
                         onClick={() => setEditingCompId(null)}
-                        className="text-[11px] text-slate-400 hover:text-slate-100"
+                        className="text-[11px] text-neon/60 transition-colors duration-150 hover:text-chalk"
                       >
                         Cancel
                       </button>
@@ -249,20 +249,20 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                       <div>
                         <Link
                           href={`/compare?id=${comp.id}`}
-                          className="font-medium hover:text-brand-light"
+                          className="font-medium text-chalk transition-colors duration-150 hover:text-neon"
                         >
                           {comp.name}
                         </Link>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
+                        <p className="text-[11px] text-neon/50 mt-0.5">
                           <Link
                             href={`/compare?id=${comp.id}`}
-                            className="hover:underline"
+                            className="transition-colors duration-150 hover:text-neon/80"
                           >
                             View comparison
                           </Link>
                         </p>
                         {comp.notes && (
-                          <p className="text-[11px] text-slate-400 whitespace-pre-wrap mt-0.5">
+                          <p className="text-[11px] text-neon/60 whitespace-pre-wrap mt-0.5">
                             {comp.notes}
                           </p>
                         )}
@@ -270,7 +270,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                       <div className="flex gap-2 shrink-0">
                         <button
                           type="button"
-                          className="text-[11px] text-slate-400 hover:text-brand-light"
+                          className="text-[11px] text-neon/50 transition-colors duration-150 hover:text-neon"
                           onClick={(e) => {
                             e.preventDefault();
                             navigator.clipboard.writeText(
@@ -283,14 +283,14 @@ function ShortlistContent({ user }: { user: AuthUser }) {
                         <button
                           type="button"
                           onClick={() => startEditComp(comp)}
-                          className="text-[11px] text-slate-500 hover:text-slate-300"
+                          className="text-[11px] text-neon/40 transition-colors duration-150 hover:text-chalk/80"
                         >
                           {comp.notes ? 'Edit' : 'Add notes'}
                         </button>
                         <button
                           type="button"
                           onClick={() => db.transact(db.tx.comparisons[comp.id].delete())}
-                          className="text-[11px] text-slate-500 hover:text-red-300"
+                          className="text-[11px] text-neon/40 transition-colors duration-150 hover:text-red-400"
                         >
                           Remove
                         </button>
@@ -301,7 +301,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
               </li>
             ))}
             {(!data || data.comparisons?.length === 0) && (
-              <li className="text-xs text-slate-400">
+              <li className="text-xs text-neon/50">
                 You haven&apos;t saved any comparisons yet. From the compare
                 page, you&apos;ll be able to save naming and notes here.
               </li>
@@ -318,7 +318,7 @@ export default function ShortlistPage() {
   const { user, isLoading: authLoading } = db.useAuth();
 
   if (authLoading) {
-    return <p className="text-sm text-slate-400">Checking login…</p>;
+    return <p className="text-sm text-neon/60">Checking login…</p>;
   }
 
   if (!user) {
@@ -327,4 +327,3 @@ export default function ShortlistPage() {
 
   return <ShortlistContent user={user} />;
 }
-

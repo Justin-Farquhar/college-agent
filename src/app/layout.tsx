@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-950 text-slate-50">
+      <body className="min-h-screen bg-night text-chalk">
         <InstantDBProvider>
           <div className="flex min-h-screen flex-col">
             <NavBar />
@@ -26,4 +26,3 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   );
 }
-

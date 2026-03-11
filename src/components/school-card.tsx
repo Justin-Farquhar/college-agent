@@ -16,20 +16,30 @@ type School = {
   roiSimple?: number | null;
 };
 
-function getRoiBadge(school: School): string {
+type RoiTier = 'standout' | 'strong' | 'positive' | 'unclear' | 'limited';
+
+function getRoiTier(school: School): RoiTier {
   if (school.roiSimple != null && Number.isFinite(school.roiSimple)) {
-    if (school.roiSimple > 200_000) return 'ROI: standout';
-    if (school.roiSimple > 100_000) return 'ROI: strong';
-    if (school.roiSimple > 0) return 'ROI: positive';
-    return 'ROI: unclear';
+    if (school.roiSimple > 200_000) return 'standout';
+    if (school.roiSimple > 100_000) return 'strong';
+    if (school.roiSimple > 0) return 'positive';
+    return 'unclear';
   }
   const earningsVsPrice = school.earningsAt10Yrs - school.netPrice;
-  if (!Number.isFinite(earningsVsPrice)) return 'ROI: data limited';
-  if (earningsVsPrice > 200_000) return 'ROI: standout';
-  if (earningsVsPrice > 100_000) return 'ROI: strong';
-  if (earningsVsPrice > 0) return 'ROI: positive';
-  return 'ROI: unclear';
+  if (!Number.isFinite(earningsVsPrice)) return 'limited';
+  if (earningsVsPrice > 200_000) return 'standout';
+  if (earningsVsPrice > 100_000) return 'strong';
+  if (earningsVsPrice > 0) return 'positive';
+  return 'unclear';
 }
+
+const roiBadgeConfig: Record<RoiTier, { label: string; className: string }> = {
+  standout: { label: 'ROI: standout', className: 'bg-neon/20 text-neon border border-neon/30' },
+  strong:   { label: 'ROI: strong',   className: 'bg-neon-dim/20 text-neon border border-neon-dim/30' },
+  positive: { label: 'ROI: positive', className: 'bg-neon-dim/10 text-neon/80 border border-neon-dim/20' },
+  unclear:  { label: 'ROI: unclear',  className: 'bg-chalk/10 text-chalk/60 border border-chalk/15' },
+  limited:  { label: 'ROI: limited data', className: 'bg-chalk/10 text-chalk/50 border border-chalk/10' },
+};
 
 export function SchoolCard({
   school,
@@ -51,71 +61,68 @@ export function SchoolCard({
     onAddedToCompare?.(school.name);
   };
 
+  const tier = getRoiTier(school);
+  const badge = roiBadgeConfig[tier];
+
   return (
-    <article className="card flex flex-col justify-between gap-3">
+    <article className="card flex flex-col justify-between gap-3 transition-all duration-200 hover:border-neon-dim/40 hover:shadow-lg hover:shadow-black/50">
       <div>
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0">
             <Link
               href={`/schools/${school.id}`}
-              className="text-sm font-semibold text-slate-50 hover:text-blue-300"
+              className="text-sm font-semibold text-chalk transition-colors duration-150 hover:text-neon"
             >
               {school.name}
             </Link>
-            <p className="text-xs text-slate-400">
-              {school.state} • {school.isPublic ? 'Public' : 'Private'}
+            <p className="text-xs text-neon/60">
+              {school.state} · {school.isPublic ? 'Public' : 'Private'}
             </p>
           </div>
-          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-            {getRoiBadge(school)}
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}>
+            {badge.label}
           </span>
         </div>
 
-        <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-300">
+        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
           <div>
-            <dt className="text-slate-500">Avg. net price</dt>
-            <dd className="font-medium">
+            <dt className="text-neon/50">Avg. net price</dt>
+            <dd className="mt-0.5 font-semibold text-chalk/90">
               {school.netPrice ? `$${school.netPrice.toLocaleString()}` : '—'}
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Median debt</dt>
-            <dd className="font-medium">
-              {school.medianDebt
-                ? `$${school.medianDebt.toLocaleString()}`
-                : '—'}
+            <dt className="text-neon/50">Median debt</dt>
+            <dd className="mt-0.5 font-semibold text-chalk/90">
+              {school.medianDebt ? `$${school.medianDebt.toLocaleString()}` : '—'}
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Completion</dt>
-            <dd className="font-medium">
-              {school.completionRate
-                ? `${school.completionRate.toFixed(1)}%`
-                : '—'}
+            <dt className="text-neon/50">Completion</dt>
+            <dd className="mt-0.5 font-semibold text-chalk/90">
+              {school.completionRate ? `${school.completionRate.toFixed(1)}%` : '—'}
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Earnings @10 yrs</dt>
-            <dd className="font-medium">
-              {school.earningsAt10Yrs
-                ? `$${school.earningsAt10Yrs.toLocaleString()}`
-                : '—'}
+            <dt className="text-neon/50">Earnings @10 yrs</dt>
+            <dd className="mt-0.5 font-semibold text-chalk/90">
+              {school.earningsAt10Yrs ? `$${school.earningsAt10Yrs.toLocaleString()}` : '—'}
             </dd>
           </div>
         </dl>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pt-1">
+      <div className="flex flex-wrap items-center gap-2 border-t border-neon-dim/10 pt-2.5">
         <button
           type="button"
           onClick={handleCompareClick}
-          className="btn text-xs"
+          className="btn py-1 text-xs"
         >
           Compare
         </button>
         <Link
           href={`/schools/${school.id}`}
-          className="text-xs text-slate-300 hover:underline"
+          className="text-xs text-chalk/60 transition-colors duration-150 hover:text-chalk"
         >
           View details
         </Link>
@@ -123,22 +130,21 @@ export function SchoolCard({
           <button
             type="button"
             onClick={onRemove}
-            className="text-xs text-slate-400 hover:text-slate-100 hover:underline"
+            className="text-xs text-neon/50 transition-colors duration-150 hover:text-red-400"
           >
-            Remove from saved work
+            Remove from saved
           </button>
         )}
         {canSave && !savedSchoolId && onSave && (
           <button
             type="button"
             onClick={onSave}
-            className="text-xs text-slate-300 hover:text-slate-100 hover:underline"
+            className="text-xs text-chalk/60 transition-colors duration-150 hover:text-chalk"
           >
-            Save to saved work
+            Save
           </button>
         )}
       </div>
     </article>
   );
 }
-
