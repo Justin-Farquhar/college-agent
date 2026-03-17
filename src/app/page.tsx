@@ -142,12 +142,11 @@ function HomeContent() {
     <div className="space-y-6">
       <section>
         <h1 className="text-2xl font-semibold tracking-tight text-chalk sm:text-3xl">
-          Find the right college using real outcomes
+          Find the right college
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-neon/70">
-          Search the College Scorecard dataset. Results include net price, debt,
-          completion, earnings, and derived stats (ROI, break-even). Filter by
-          state and type, then compare or save to your list.
+          Real data. Net price · debt · completion · earnings · ROI · break-even.
+          Filter by state or type, then compare or save.
         </p>
       </section>
 
@@ -164,14 +163,6 @@ function HomeContent() {
       {error && <p className="text-sm text-red-400">{error}</p>}
       {saveError && <p className="text-sm text-red-400">{saveError}</p>}
 
-      {!hasSearchCriteria && (
-        <div className="card rounded-xl border-neon-dim/15 bg-night-card/40 text-center">
-          <p className="text-sm text-neon/60">
-            Enter a school name and/or choose state / type above, then search to
-            see results.
-          </p>
-        </div>
-      )}
 
       {hasSearchCriteria && (
         <>
@@ -207,18 +198,11 @@ function HomeContent() {
           )}
           {!isLoading && schools.length === 0 && hasSearchCriteria && (
             <p className="text-sm text-neon/60">
-              No schools match. Try a different name or filters.
+              No results. Try a broader name, a different state, or remove the type filter.
             </p>
           )}
         </>
       )}
-
-      <p className="text-xs text-neon/40">
-        Data is from your built dataset (run{' '}
-        <code className="rounded bg-neon-dim/15 px-1 text-chalk/70">npm run data:build</code>{' '}
-        with scorecard.csv in{' '}
-        <code className="rounded bg-neon-dim/15 px-1 text-chalk/70">data/</code>).
-      </p>
 
       {compareToast.visible && (
         <div className="fixed bottom-4 left-1/2 z-30 w-full max-w-md -translate-x-1/2 rounded-xl border border-neon-dim/30 bg-night-card/95 px-4 py-3 text-xs text-chalk shadow-2xl shadow-black/60 backdrop-blur">

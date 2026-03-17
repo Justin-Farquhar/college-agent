@@ -1,89 +1,179 @@
 # College Agent
 
-College Agent is a Next.js app that helps students compare colleges using the U.S. Department of Education College Scorecard dataset. You run **one build script** on your data file; the **website queries** that pre-built data for schools. Optional **login** (magic link) unlocks **Saved work**: per-user saved schools, saved comparisons, and personal notes—stored in InstantDB.
+College Agent helps students and families compare colleges using real U.S. Department of Education College Scorecard data — net price, debt, completion rate, earnings, and derived ROI metrics. It works like a travel comparison site for colleges.
 
-## Architecture
+**Project status:** Feature-complete. Deployed on Vercel. No automated tests. Not under active development.
 
-1. **Build (one-time, on your machine)**  
-   Put the College Scorecard CSV in `data/scorecard.csv`, then run:
-   ```bash
-   npm run data:build
-   ```
-   The script reads the CSV, normalizes fields, **computes derived stats** (ROI, break-even, debt-with-interest), and writes `data/schools.json`.
+---
 
-2. **Website**  
-   - **School data**: Search and filters use `GET /api/schools?q=...&state=...&isPublic=...`, which reads from `data/schools.json` (cached in memory). Detail and compare pages load schools by `id` from the same API. No database required for the school list.
-   - **Saved work** (optional): When users log in (magic-link email via InstantDB), they can save schools and comparisons and add personal notes. That data lives in InstantDB and is tied to their account.
+## How it works
 
-So: **dataset in a file → script builds one JSON with raw + derived data → website queries that file.** Saved schools, comparisons, and notes are stored in InstantDB and only used when the user is logged in.
+1. A one-time build script (`npm run data:build`) reads `data/scorecard.csv`, normalizes fields, computes derived stats (ROI, break-even, debt-with-interest), and writes `data/schools.json`.
+2. The website serves school data from that static JSON file via an in-memory API route — no database needed for search or compare.
+3. Optional login (magic-link email via InstantDB) unlocks Saved work: per-user saved schools, saved comparisons, and personal notes.
+
+**Data flow:** `scorecard.csv` → build script → `schools.json` → `/api/schools` → UI
+
+---
 
 ## Tech stack
 
-- **Framework**: Next.js (App Router, TypeScript)
-- **Styling**: Tailwind CSS
-- **School data**: Static file `data/schools.json` + API route that searches/filters it
-- **Auth & saved work**: InstantDB (magic-link login, saved schools, saved comparisons, notes)
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router, TypeScript) |
+| Styling | Tailwind CSS v4 |
+| School data | Static `data/schools.json` + in-memory API route |
+| Auth & saved work | InstantDB (magic-link, no passwords) |
+| Deployment | Vercel |
+
+---
 
 ## Getting started
 
-1. **Install**
-   ```bash
-   npm install
-   ```
-   Place your College Scorecard CSV at `data/scorecard.csv`, then build the school data:
-   ```bash
-   npm run data:build
-   ```
-   You should see output like: `Wrote N schools to data/schools.json`.
+### 1. Install
+```bash
+npm install
+```
 
-2. **Run the app**
-   ```bash
-   npm run dev
-   ```
-   Open `http://localhost:3000`. Search by school name and/or filter by state and public/private. Results come from the pre-built data.
+### 2. Build school data
+Place the College Scorecard CSV at `data/scorecard.csv`, then run:
+```bash
+npm run data:build
+```
+You should see: `Wrote N schools to data/schools.json`.
 
-3. **Saved work (optional)**  
-   Use **Log in** in the nav to sign in with a magic-link email (InstantDB). Once logged in, you can save schools and comparisons to **Saved work** and add personal notes. The app is fully usable without logging in; search, compare, and school details all work.
+A pre-built `data/schools.json` is already committed to the repo, so this step is only needed if you want to refresh the dataset.
 
-## Script: `npm run data:build`
+### 3. Run the app
+```bash
+npm run dev
+```
+Open `http://localhost:3000`.
 
-- **Input**: `data/scorecard.csv` (or `data/colleges.json` from an earlier convert step).
-- **Output**: `data/schools.json` — one object per school with:
-  - Normalized fields: `id`, `name`, `state`, `isPublic`, `netPrice`, `medianDebt`, `completionRate`, `earlyCareerEarnings`, `earningsAt10Yrs`, `institutionId`
-  - **Derived (pre-computed)**: `debtWithInterest10Yrs`, `earningsPremium10Yrs`, `roiSimple`, `breakEvenYears` (based on 4-year completion and 5% simple interest on debt).
+---
 
-The website only reads and displays these; it does not compute them.
+## Scripts
 
-## API
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build (used by Vercel) |
+| `npm run data:build` | Build `data/schools.json` from `data/scorecard.csv` |
+| `npm run data:convert` | Convert an Excel/XLSX scorecard export to JSON (intermediate step) |
 
-- `GET /api/schools?q=...&state=...&isPublic=...&limit=200` — search/filter; returns an array of schools.
-- `GET /api/schools?id=...` — fetch a single school by id (for detail and compare).
+---
+
+## Configuration
+
+### InstantDB
+The InstantDB App ID is hardcoded in `src/lib/db.ts` line 4:
+```ts
+const APP_ID = '29031c31-34e3-4764-8e6e-1e2dec7aa2c2';
+```
+This is a **public client-side identifier** (not a secret — analogous to a Firebase project ID). It is safe to commit. Access control is enforced server-side by InstantDB using the rules in `instant.perms.ts`.
+
+- **Schema**: `instant.schema.ts` — defines `saved_schools`, `comparisons`, `comparison_schools` entities
+- **Permissions**: `instant.perms.ts` — `saved_schools` and `comparisons` are user-owned (read/write/delete own only); school data is public read-only
+
+### Environment variables
+None required. The app runs with no `.env` file. The InstantDB App ID is the only external config and it is hardcoded intentionally.
+
+---
+
+## Codebase structure
+
+```
+src/
+  app/
+    page.tsx                  # Home — search, filters, school cards
+    layout.tsx                # Root layout: NavBar + InstantDB provider
+    schools/[id]/page.tsx     # School detail — financial snapshot + ROI metrics
+    compare/page.tsx          # Side-by-side comparison table
+    shortlist/page.tsx        # Saved work (requires login)
+    login/page.tsx            # Magic-link login flow
+    api/schools/route.ts      # API: search/filter or fetch by id from schools.json
+  components/
+    school-card.tsx           # Card used on the home search results grid
+    school-search-filters.tsx # Search bar + state + public/private filters
+    nav-bar.tsx               # Top nav with auth state
+    InfoTooltip.tsx           # Hover/click tooltip (portal-based, viewport-clamped)
+    instantdb-provider.tsx    # Wraps app in InstantDB context
+  lib/
+    db.ts                     # InstantDB client singleton
+    schools-store.ts          # In-memory cache for schools.json
+    compareSelection.ts       # localStorage-backed compare selection state
+    sample-schools.ts         # Fallback sample data (used if schools.json is empty)
+data/
+  schools.json                # Pre-built school records (committed)
+  scorecard.csv               # Raw College Scorecard export (source for build script)
+  colleges.json               # Intermediate JSON from excel-to-json step (untracked)
+scripts/
+  build-schools.mjs           # Main data build: CSV → schools.json
+  excel-to-json.mjs           # Optional: XLSX → colleges.json
+  seed.mjs                    # Optional: seed InstantDB with sample data
+instant.schema.ts             # InstantDB entity schema
+instant.perms.ts              # InstantDB access control rules
+```
+
+---
 
 ## Pages
 
-- **Home (`/`)**  
-  Search and filters; click Search to load results. Each card shows key metrics (net price, debt, completion, earnings @10 yrs) and:
-  - **View details** — single-school page with full metrics and tooltips.
-  - **Compare** — add the school to the compare selection (stored in the browser); a toast confirms “Added to Compare tab”.
-  - **Save to saved work** / **Remove from saved work** — when logged in, save or remove the school from your list.
+### Home (`/`)
+Search and filter colleges. Results appear as cards showing net price, debt, completion rate, and earnings at 10 years. Each card has:
+- **View details** (primary) — goes to the school detail page
+- **Compare** — adds the school to the in-session compare selection; a toast appears with a link to the Compare tab
+- **Save / Remove** — only visible when logged in
 
-- **School detail (`/schools/[id]`)**  
-  Financial snapshot and pre-computed ROI / break-even for one school, with inline explanations. When logged in, you can **Save to saved work** or **Remove from saved work**.
+### School detail (`/schools/[id]`)
+Three cards: Financial snapshot, ROI & break-even estimates, and a collapsible "How to read" explainer. Each metric has an `ⓘ` tooltip. When logged in, a **Save / Remove** button appears top-right inline with the school name.
 
-- **Compare (`/compare`)**  
-  Side-by-side table of selected schools. Add schools via the Compare button on cards; remove from the table as needed. When logged in and you have two or more schools:
-  - **Save this comparison** — give it a name and optional notes; it appears in Saved work.
-  - When viewing a comparison you previously saved (e.g. via a link from Saved work), **Remove this comparison from saved work** is available if you own it.
-  - Opening `/compare?id=<saved-comparison-id>` loads that saved comparison and shows the same table.
+### Compare (`/compare`)
+Side-by-side table of up to 4 schools. Schools are added via the Compare button on cards and stored in `localStorage`. When logged in with 2+ schools, a **Save this comparison** form appears. Opening `/compare?id=<comparison-id>` loads a previously saved comparison.
 
-- **Saved work (`/shortlist`)**  
-  Requires login. Two sections:
-  - **Saved schools** — each with a link to the school detail, **Add/Edit notes**, and **Remove**.
-  - **Saved comparisons** — each with a link to **View comparison** (opens the compare page with those schools), **Copy link**, **Add notes** / **Edit** (name and notes), and **Remove**.
+### Saved work (`/shortlist`)
+Requires login — redirects to `/login` if not authenticated. Two columns: saved schools (with notes) and saved comparisons (with copy-link, edit, remove). The "Saved work" nav link dims and shows a "Login required" tooltip for logged-out users.
 
-- **Log in (`/login`)**  
-  Magic-link auth: enter email, receive a 6-digit code, then verify. No password. Powered by InstantDB.
+### Log in (`/login`)
+Magic-link flow: enter email → receive 6-digit code → verify. No passwords stored anywhere.
 
-## Optional: Running without InstantDB
+---
 
-The app is configured to use InstantDB for auth and saved work. The core flow—search, school details, and compare (in-session)—only uses `data/schools.json` and `/api/schools`. If you do not need login or saved work, you could remove or stub the InstantDB dependency and the Saved work / Login UI; the rest of the app would still work.
+## Data schema (`data/schools.json`)
+
+Each school object contains:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique identifier (from Scorecard UNITID) |
+| `name` | string | Institution name |
+| `state` | string | Two-letter state code |
+| `isPublic` | boolean | Public vs. private |
+| `netPrice` | number | Avg. annual net price after aid |
+| `medianDebt` | number | Median federal loan balance at graduation |
+| `completionRate` | number | Graduation rate (%) |
+| `earlyCareerEarnings` | number | Median earnings ~2 yrs after graduation |
+| `earningsAt10Yrs` | number | Median earnings 10 yrs after entry |
+| `institutionId` | string | Raw UNITID from Scorecard |
+| `debtWithInterest10Yrs` | number | Derived: `medianDebt × 1.5` (5% simple interest × 10 yrs) |
+| `earningsPremium10Yrs` | number | Derived: 10-yr earnings − (4 × netPrice) − debtWithInterest |
+| `roiSimple` | number \| null | Alias for earningsPremium10Yrs |
+| `breakEvenYears` | number \| null | Derived: total cost ÷ annual earnings premium |
+
+Derived fields assume 4-year completion and 5% simple interest. The website displays them as estimates, not guarantees.
+
+---
+
+## Known limitations / not implemented
+
+- **No automated tests.** No Jest, Vitest, or Playwright setup exists.
+- **No rate limiting** on `/api/schools`. Fine for current usage; would need middleware before scaling.
+- **No cache headers** on API responses. Browser/CDN caching is not configured.
+- **InstantDB App ID is hardcoded.** Works fine; could be moved to an env var if multi-environment deployment is needed.
+- **Major-level data not implemented.** The original vision includes program/major comparisons (e.g. Mechanical Engineering at UD vs. Rutgers). The Scorecard dataset supports this but it has not been built.
+
+---
+
+## Running without InstantDB
+
+The core features — search, school detail, and in-session compare — work entirely from `data/schools.json` with no external services. Login and Saved work are the only features that require InstantDB. To strip them out, remove the InstantDB provider from `layout.tsx`, delete the `shortlist/` and `login/` pages, and remove auth-dependent UI from the nav, cards, and detail page.

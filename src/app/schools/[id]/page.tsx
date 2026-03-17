@@ -127,40 +127,41 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-chalk">{school.name}</h1>
-        <p className="text-sm text-neon/60">
-          {school.state} · {school.isPublic ? 'Public' : 'Private'}
-        </p>
-      </section>
-
-      {user && (
-        <section className="flex flex-wrap items-center gap-3">
-          {shortlistError && (
-            <p className="text-sm text-red-400">{shortlistError}</p>
-          )}
-          {savedEntryForThisSchool ? (
-            <>
-              <span className="text-xs text-neon/60">Saved to your list.</span>
+      <section className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-chalk">{school.name}</h1>
+          <p className="text-sm text-neon/60">
+            {school.state} · {school.isPublic ? 'Public' : 'Private'}
+          </p>
+        </div>
+        {user && (
+          <div className="flex shrink-0 flex-wrap items-center gap-2 pt-1">
+            {shortlistError && (
+              <p className="text-sm text-red-400">{shortlistError}</p>
+            )}
+            {savedEntryForThisSchool ? (
+              <>
+                <span className="text-xs text-neon/60">Saved.</span>
+                <button
+                  type="button"
+                  onClick={handleRemoveFromShortlist}
+                  className="text-xs text-neon/60 transition-colors duration-150 hover:text-red-400"
+                >
+                  Remove
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                onClick={handleRemoveFromShortlist}
-                className="text-xs text-neon/60 transition-colors duration-150 hover:text-red-400"
+                onClick={handleSaveToShortlist}
+                className="btn text-xs"
               >
-                Remove from saved work
+                Save
               </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSaveToShortlist}
-              className="btn text-xs"
-            >
-              Save to saved work
-            </button>
-          )}
-        </section>
-      )}
+            )}
+          </div>
+        )}
+      </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="card space-y-2">
@@ -362,9 +363,11 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
           </dl>
         </div>
 
-        <div className="card space-y-2">
-          <h2 className="text-sm font-semibold text-chalk">How to read</h2>
-          <ul className="list-disc space-y-1.5 pl-5 text-xs text-neon/70">
+        <details className="card group space-y-2">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-chalk/70 transition-colors duration-150 hover:text-chalk">
+            How to read <span className="text-xs font-normal text-neon/50 group-open:hidden"> ↓</span><span className="text-xs font-normal text-neon/50 hidden group-open:inline"> ↑</span>
+          </summary>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs text-neon/70">
             <li>
               <span className="font-medium text-chalk/80">Net price</span> is the typical
               amount students pay for one year after grants and scholarships,
@@ -387,7 +390,7 @@ export default function SchoolDetailPage({ params }: SchoolPageProps) {
               directional guides rather than precise forecasts.
             </li>
           </ul>
-        </div>
+        </details>
       </section>
     </div>
   );

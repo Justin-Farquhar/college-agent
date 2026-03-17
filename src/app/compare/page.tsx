@@ -166,11 +166,10 @@ function CompareContent() {
       <section className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-chalk">
-            Compare colleges side by side
+            Compare colleges
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-neon/70">
-            Select 2–4 schools from search results (click Compare on a card) and
-            compare net price, debt, completion, earnings, and derived ROI.
+            Side-by-side comparison. Add schools via the Compare button on any card.
           </p>
         </div>
       </section>
@@ -256,10 +255,10 @@ function CompareContent() {
       )}
 
       {getStoredCompareSelection().length === 0 && !compId && (
-        <p className="text-sm text-neon/60">
-          No schools in Compare yet. From search results, click
-          &quot;Compare&quot; on a school card to add it here.
-        </p>
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-sm text-neon/60">No schools added yet.</p>
+          <Link href="/" className="btn text-xs">Search schools</Link>
+        </div>
       )}
 
       {loading && (

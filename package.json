@@ -2,7 +2,6 @@
   "name": "college-agent",
   "version": "1.0.0",
   "description": "College Agent – compare colleges using College Scorecard data",
-  "main": "index.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -17,7 +16,6 @@
     "url": "git+https://github.com/Justin-Farquhar/college-agent.git"
   },
   "keywords": [],
-  "author": "",
   "license": "MIT",
   "type": "module",
   "bugs": {

@@ -89,8 +89,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
       <section>
         <h1 className="text-2xl font-semibold tracking-tight text-chalk">Your saved work</h1>
         <p className="mt-2 max-w-2xl text-sm text-neon/70">
-          Saved schools and comparisons tied to your email. Use this as a
-          working list to reflect, share, and revisit.
+          Your saved schools and comparisons.
         </p>
       </section>
 
@@ -188,8 +187,7 @@ function ShortlistContent({ user }: { user: AuthUser }) {
             ))}
             {(!data || data.saved_schools?.length === 0) && (
               <li className="text-xs text-neon/50">
-                You haven&apos;t saved any schools yet. Use &quot;Save to
-                saved work&quot; on a school card to add one.
+                No saved schools yet. Hit Save on any school card to add one.
               </li>
             )}
           </ul>

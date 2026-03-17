@@ -31,12 +31,26 @@ export function NavBar() {
           >
             Compare
           </Link>
-          <Link
-            href="/shortlist"
-            className="text-chalk/70 transition-colors duration-150 hover:text-chalk"
-          >
-            Saved work
-          </Link>
+          {user ? (
+            <Link
+              href="/shortlist"
+              className="text-chalk/70 transition-colors duration-150 hover:text-chalk"
+            >
+              Saved work
+            </Link>
+          ) : (
+            <span className="group relative">
+              <Link
+                href="/shortlist"
+                className="text-chalk/40 transition-colors duration-150"
+              >
+                Saved work
+              </Link>
+              <span className="pointer-events-none absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded border border-neon-dim/20 bg-night-card px-2 py-1 text-[10px] text-neon/70 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                Login required
+              </span>
+            </span>
+          )}
           {isLoading ? (
             <span className="text-xs text-neon/50">Checking login…</span>
           ) : user ? (
